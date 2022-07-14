@@ -72,7 +72,7 @@ module.exports = {
     // production: true    // Treats this network as if it was a public net. (default: false)
     // }
     bsctest: {
-      provider: () => new HDWalletProvider(mnemonic, `https://speedy-nodes-nyc.moralis.io/50d91e85ea901f0b2e54edeb/bsc/testnet`),
+      provider: () => new HDWalletProvider(mnemonic, `https://data-seed-prebsc-2-s3.binance.org:8545/`),
       network_id: "97",
       timeoutBlocks: 600,
       //confirmations: 2,
@@ -80,7 +80,7 @@ module.exports = {
       skipDryRun: false,
       networkCheckTimeout: 600000000,
       websockets: true
-    },
+   },
   },
 
   // Set default mocha options here, use special reporters etc.
