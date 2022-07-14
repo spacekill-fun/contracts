@@ -14,8 +14,15 @@ contract GameNFT is ERC4907, ERC2981, Ownable {
 
     // Optional mapping for token URIs
     mapping(uint256 => string) private _tokenURIs;
+    mapping(address => bool) public admins;
+
+    modifier onlyAdmin() {
+        require(admins[msg.sender], "!admin");
+        _;
+    }
 
     constructor(string memory name, string memory symbol) ERC4907(name, symbol) {
+        admins[msg.sender] = true;
     }
 
     /**
@@ -29,7 +36,7 @@ contract GameNFT is ERC4907, ERC2981, Ownable {
      * @dev Mint one metaverse version of NFT for the base NFT with specific token id, only the owner could mint successfully
      * @param tokenId The specific token id of base NFT
      */
-    function mint(uint256 tokenId, address to) external onlyOwner {
+    function mint(uint256 tokenId, address to) external onlyAdmin {
         mintInternal(to, tokenId);
     }
 
@@ -61,7 +68,7 @@ contract GameNFT is ERC4907, ERC2981, Ownable {
      * @param receiver The royalty fee receiver
      * @param feeNumerator The royalty fee ratio, should be set to 200 if the ratio is 2%
      */
-    function setDefaultRoyalty(address receiver, uint96 feeNumerator) external onlyOwner {
+    function setDefaultRoyalty(address receiver, uint96 feeNumerator) external onlyAdmin {
         super._setDefaultRoyalty(receiver, feeNumerator);
     }
 
@@ -71,7 +78,7 @@ contract GameNFT is ERC4907, ERC2981, Ownable {
      * @param receiver The royalty fee receiver
      * @param feeNumerator The royalty fee ratio, should be set to 200 if the ratio is 2%
      */
-    function setTokenRoyalty(uint256 tokenId, address receiver, uint96 feeNumerator) external onlyOwner {
+    function setTokenRoyalty(uint256 tokenId, address receiver, uint96 feeNumerator) external onlyAdmin {
         super._setTokenRoyalty(tokenId, receiver, feeNumerator);
     }
 
@@ -80,7 +87,7 @@ contract GameNFT is ERC4907, ERC2981, Ownable {
      * @param tokenId The specific NFT token id
      * @param _tokenURI The token URI to be set
      */
-    function setTokenURI(uint256 tokenId, string memory _tokenURI) external onlyOwner {
+    function setTokenURI(uint256 tokenId, string memory _tokenURI) external onlyAdmin {
         _setTokenURI(tokenId, _tokenURI);
     }
 
@@ -88,7 +95,7 @@ contract GameNFT is ERC4907, ERC2981, Ownable {
      * @dev Set the base token URI, the base URI is used to construct token URI be default
      * @param baseURI_ The base token URI to be set
      */
-    function setBaseTokenURI(string memory baseURI_) external onlyOwner {
+    function setBaseTokenURI(string memory baseURI_) external onlyAdmin {
          _baseTokenURI = baseURI_;
     }
 
@@ -102,6 +109,14 @@ contract GameNFT is ERC4907, ERC2981, Ownable {
     function _setTokenURI(uint256 tokenId, string memory _tokenURI) internal virtual {
         require(_exists(tokenId), "ERC721URIStorage: URI set of nonexistent token");
         _tokenURIs[tokenId] = _tokenURI;
+    }
+
+    function enableAdmin(address _addr) external onlyOwner {
+        admins[_addr] = true;
+    }
+
+    function disableAdmin(address _addr) external onlyOwner {
+        admins[_addr] = false;
     }
 
     function _baseURI() internal view virtual override returns (string memory) {
