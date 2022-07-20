@@ -1380,12 +1380,13 @@ contract GameNFT is ERC4907, ERC2981, Ownable {
         return super.supportsInterface(interfaceId);
     }
 
-    /**
-     * @dev Mint one metaverse version of NFT for the base NFT with specific token id, only the owner could mint successfully
-     * @param tokenId The specific token id of base NFT
-     */
     function mint(uint256 tokenId, address to) external onlyAdmin {
         mintInternal(to, tokenId);
+    }
+
+    function mint(uint256 tokenId, address to, string memory _tokenURI) external onlyAdmin {
+        mintInternal(to, tokenId);
+        _setTokenURI(tokenId, _tokenURI);
     }
 
     function mintInternal(address to, uint256 tokenId) internal {
