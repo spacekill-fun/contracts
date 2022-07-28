@@ -44,7 +44,9 @@ contract GameVault is Ownable {
     }
 
     function withdraw(address token, address payable recipient, uint256 amount) external onlyAdmin {
-        require(!riskControlStrategy.isRisky(token, recipient, amount), "risky operation");
+        if (riskControlStrategy != address(0x0)) {
+            require(!riskControlStrategy.isRisky(token, recipient, amount), "risky operation");
+        }
 
         withdrawInternal(token, recipient, amount);
     }
