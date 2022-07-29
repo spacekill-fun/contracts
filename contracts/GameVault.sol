@@ -15,7 +15,7 @@ contract GameVault is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     mapping(address => bool) public admins;
-    IRiskControlStrategy riskControlStrategy;
+    IRiskControlStrategy public riskControlStrategy;
 
     struct TokenBalance {
         address token;
