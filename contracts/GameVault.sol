@@ -4,12 +4,14 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import "./Ownable.sol";
 import "./IRiskControlStrategy.sol";
 
-contract GameVault is Ownable {
+contract GameVault is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     mapping(address => bool) public admins;
@@ -29,22 +31,22 @@ contract GameVault is Ownable {
         admins[msg.sender] = true;
     }
 
-    function batchWithdraw(address token, address payable[] memory recipients, uint[] memory amounts) external onlyAdmin {
+    function batchWithdraw(address token, address payable[] memory recipients, uint[] memory amounts) external onlyAdmin nonReentrant {
         require(recipients.length == amounts.length, "recipient & amount arrays must be the same length");
         for (uint i; i < recipients.length; i++) {
             withdrawInternal(token, recipients[i], amounts[i]);
         }  
     }
 
-    function batchWithdraw(address[] memory tokens, address payable[] memory recipients, uint[] memory amounts) external onlyAdmin {
+    function batchWithdraw(address[] memory tokens, address payable[] memory recipients, uint[] memory amounts) external onlyAdmin nonReentrant{
         require(tokens.length == recipients.length && recipients.length == amounts.length, "inconsistent length");
         for (uint i; i < recipients.length; i++) {
             withdrawInternal(tokens[i], recipients[i], amounts[i]);
         }  
     }
 
-    function withdraw(address token, address payable recipient, uint256 amount) external onlyAdmin {
-        if (riskControlStrategy != address(0x0)) {
+    function withdraw(address token, address payable recipient, uint256 amount) external onlyAdmin nonReentrant{
+        if (address(riskControlStrategy) != address(0x0)) {
             require(!riskControlStrategy.isRisky(token, recipient, amount), "risky operation");
         }
 
@@ -56,6 +58,20 @@ contract GameVault is Ownable {
             Address.sendValue(recipient, amount);
         } else {
             IERC20(token).safeTransfer(recipient, amount);
+        }
+    }
+
+    function withdrawNFT(address token, address recipient, uint256 tokenId) public onlyAdmin nonReentrant {
+        if (address(riskControlStrategy) != address(0x0)) {
+            require(!riskControlStrategy.isRiskyNFT(token, recipient, tokenId), "risky operation");
+        }
+        IERC721(token).safeTransferFrom(address(this), recipient, tokenId);
+    }
+
+    function batchWithdrawNFT(address token, address[] memory recipients, uint256[] memory tokenIds) external onlyAdmin nonReentrant {
+        require(tokenIds.length == recipients.length, "inconsistent length");
+        for (uint i; i < recipients.length; i++) {
+            withdrawNFT(token, recipients[i], tokenIds[i]);
         }
     }
 
