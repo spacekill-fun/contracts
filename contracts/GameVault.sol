@@ -47,7 +47,7 @@ contract GameVault is Ownable, ReentrancyGuard {
 
     function withdraw(address token, address payable recipient, uint256 amount) external onlyAdmin nonReentrant{
         if (address(riskControlStrategy) != address(0x0)) {
-            require(!riskControlStrategy.isRisky(token, recipient, amount), "risky operation");
+            require(!riskControlStrategy.isRisky(token, recipient, amount, msg.sender), "risky operation");
         }
 
         withdrawInternal(token, recipient, amount);
@@ -63,7 +63,7 @@ contract GameVault is Ownable, ReentrancyGuard {
 
     function withdrawNFT(address token, address recipient, uint256 tokenId) public onlyAdmin nonReentrant {
         if (address(riskControlStrategy) != address(0x0)) {
-            require(!riskControlStrategy.isRiskyNFT(token, recipient, tokenId), "risky operation");
+            require(!riskControlStrategy.isRiskyNFT(token, recipient, tokenId, msg.sender), "risky operation");
         }
         IERC721(token).safeTransferFrom(address(this), recipient, tokenId);
     }
