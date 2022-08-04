@@ -1,5 +1,7 @@
 const GameVault = artifacts.require("GameVault");
 const GameToken = artifacts.require("GameToken");
+const GameNFT = artifacts.require("GameNFT");
+const DefaultRiskControlStrategy = artifacts.require("DefaultRiskControlStrategy");
 
 contract("GameVault", (accounts) => {
 
@@ -7,7 +9,8 @@ contract("GameVault", (accounts) => {
     beforeEach(async function () {
         const gameTokenInstance = await GameToken.deployed();
         const gameVaultInstance = await GameVault.deployed();
-        gameTokenInstance.mint(gameVaultInstance.address, "100000000000000000000");
+        await gameTokenInstance.mint(gameVaultInstance.address, "100000000000000000000");
+        await gameVaultInstance.sendTransaction({value:  web3.utils.toWei('1', 'ether')});
     });
 
     it("should withdraw erc20 token properly", async () => {
@@ -20,5 +23,40 @@ contract("GameVault", (accounts) => {
         await gameVaultInstance.withdraw(gameTokenInstance.address, withdrawToAccount, amountToWithdraw);
         const balanceAfterWithdraw = await gameTokenInstance.balanceOf(withdrawToAccount);
         assert.equal(amountToWithdraw, balanceAfterWithdraw.toString(), "bad withdraw");
+    });
+
+    it("should withdraw native token properly", async () => {
+        const toBN = web3.utils.toBN;
+        const nativeToken = "0x0000000000000000000000000000000000000000";
+        const gameVaultInstance = await GameVault.deployed();
+        const nativeTokenBalance = await gameVaultInstance.getTokenBalance("0x0000000000000000000000000000000000000000");
+        console.log("gameTokenBalance: ", nativeTokenBalance.toString());
+        const amountToWithdraw = "100000000000000000";
+        const withdrawToAccount = accounts[1];
+        const balanceBeforeWithdraw = await web3.eth.getBalance(withdrawToAccount);
+        const checkBalanceBN = toBN(balanceBeforeWithdraw).add(toBN(amountToWithdraw))
+        await gameVaultInstance.withdraw(nativeToken, withdrawToAccount, amountToWithdraw);
+        const balanceAfterWithdraw = await web3.eth.getBalance(withdrawToAccount);
+        assert.deepEqual(checkBalanceBN.toString(), balanceAfterWithdraw.toString(), "bad withdraw");
+    });
+
+    it("should withdraw NFT token properly", async () => {
+        const gameVaultInstance = await GameVault.deployed();
+        const gameNFTInstance = await GameNFT.deployed();
+        await gameNFTInstance.mint(0, gameVaultInstance.address);
+        await gameNFTInstance.mint(1, gameVaultInstance.address, "");
+        const nftTokenBalance = await gameVaultInstance.getTokenBalance(gameNFTInstance.address);
+        console.log("gameTokenBalance: ", nftTokenBalance.toString());
+        const withdrawToAccount = accounts[1];
+        await gameVaultInstance.withdrawNFT(gameNFTInstance.address, withdrawToAccount, 0);
+        const nftOwner = await gameNFTInstance.ownerOf(0);
+        assert.equal(withdrawToAccount, nftOwner, "bad nft withdraw")
+
+        // await gameVaultInstance.withdrawNFT(gameNFTInstance.address, withdrawToAccount, 1, {from: accounts[2]});
+
+        const riskStrategyInstance = await DefaultRiskControlStrategy.deployed();
+        await gameVaultInstance.setRiskControlStrategy(riskStrategyInstance.address);
+        await riskStrategyInstance.setPaused(true);
+        await gameVaultInstance.withdrawNFT(gameNFTInstance.address, withdrawToAccount, 1, {from: accounts[0]});
     });
 });

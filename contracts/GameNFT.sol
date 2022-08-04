@@ -16,6 +16,8 @@ contract GameNFT is ERC4907, ERC2981, Ownable {
     mapping(uint256 => string) private _tokenURIs;
     mapping(address => bool) public admins;
 
+    event AdminEnabled(address admin, bool enabled);
+
     modifier onlyAdmin() {
         require(admins[msg.sender], "!admin");
         _;
@@ -114,10 +116,14 @@ contract GameNFT is ERC4907, ERC2981, Ownable {
 
     function enableAdmin(address _addr) external onlyOwner {
         admins[_addr] = true;
+
+        emit AdminEnabled(_addr, true);
     }
 
     function disableAdmin(address _addr) external onlyOwner {
         admins[_addr] = false;
+
+        emit AdminEnabled(_addr, false);
     }
 
     function _baseURI() internal view virtual override returns (string memory) {

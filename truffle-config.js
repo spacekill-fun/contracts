@@ -81,6 +81,16 @@ module.exports = {
       networkCheckTimeout: 600000000,
       websockets: true
    },
+   bsc: {
+    provider: () => new HDWalletProvider(mnemonic, `https://bsc-dataseed1.defibit.io`),
+    network_id: "97",
+    timeoutBlocks: 600,
+    //confirmations: 2,
+    gasPrice: 5000000000,
+    skipDryRun: false,
+    networkCheckTimeout: 600000000,
+    websockets: false
+ },
   },
 
   // Set default mocha options here, use special reporters etc.

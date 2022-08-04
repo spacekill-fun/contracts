@@ -5,17 +5,21 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import "./Ownable.sol";
 import "./IRiskControlStrategy.sol";
 
-contract GameVault is Ownable, ReentrancyGuard {
+contract GameVault is Ownable, ReentrancyGuard, ERC721Holder {
     using SafeERC20 for IERC20;
 
     mapping(address => bool) public admins;
     IRiskControlStrategy public riskControlStrategy;
+
+    event AdminEnabled(address admin, bool enabled);
 
     struct TokenBalance {
         address token;
@@ -79,6 +83,18 @@ contract GameVault is Ownable, ReentrancyGuard {
         riskControlStrategy = _riskControlStrategy;
     }
 
+    function enableAdmin(address _addr) external onlyOwner {
+        admins[_addr] = true;
+
+        emit AdminEnabled(_addr, true);
+    }
+
+    function disableAdmin(address _addr) external onlyOwner {
+        admins[_addr] = false;
+
+        emit AdminEnabled(_addr, false);
+    }
+
     function getTokenBalance(address token) view public returns (uint256) {
         if (token == address(0x0)) {
             return address(this).balance;
@@ -94,8 +110,6 @@ contract GameVault is Ownable, ReentrancyGuard {
         }
         return tokenBalances;
     }
-
-
 
     receive() external payable {
     }
