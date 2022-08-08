@@ -44,6 +44,7 @@ module.exports = {
     development: {
      host: "127.0.0.1",     // Localhost (default: none)
      port: 7545,            // Standard Ethereum port (default: none)
+     gasPrice: 10000000000,
      network_id: "*",       // Any network (default: none)
     },
     // Another network with more advanced options...
@@ -72,25 +73,25 @@ module.exports = {
     // production: true    // Treats this network as if it was a public net. (default: false)
     // }
     bsctest: {
-      provider: () => new HDWalletProvider(mnemonic, `https://data-seed-prebsc-2-s3.binance.org:8545/`),
+      provider: () => new HDWalletProvider(mnemonic, `https://data-seed-prebsc-1-s1.binance.org:8545/`),
       network_id: "97",
       timeoutBlocks: 600,
       //confirmations: 2,
       gasPrice: 10000000000,
       skipDryRun: false,
       networkCheckTimeout: 600000000,
-      websockets: true
+      websockets: false
    },
    bsc: {
-    provider: () => new HDWalletProvider(mnemonic, `https://bsc-dataseed1.defibit.io`),
-    network_id: "97",
+    provider: () => new HDWalletProvider(mnemonic, `https://bsc-dataseed2.binance.org`),
+    network_id: "56",
     timeoutBlocks: 600,
     //confirmations: 2,
     gasPrice: 5000000000,
     skipDryRun: false,
     networkCheckTimeout: 600000000,
     websockets: false
- },
+  },
   },
 
   // Set default mocha options here, use special reporters etc.

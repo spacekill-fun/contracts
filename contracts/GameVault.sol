@@ -20,6 +20,8 @@ contract GameVault is Ownable, ReentrancyGuard, ERC721Holder {
     IRiskControlStrategy public riskControlStrategy;
 
     event AdminEnabled(address admin, bool enabled);
+    event Withdraw(address token, address from, address to, uint256 amount);
+    event WithdrawNFT(address token, address from, address to, uint256 tokenId);
 
     struct TokenBalance {
         address token;
@@ -63,6 +65,7 @@ contract GameVault is Ownable, ReentrancyGuard, ERC721Holder {
         } else {
             IERC20(token).safeTransfer(recipient, amount);
         }
+        emit Withdraw(token, address(this), recipient, amount);
     }
 
     function withdrawNFT(address token, address recipient, uint256 tokenId) public onlyAdmin nonReentrant {
@@ -70,6 +73,7 @@ contract GameVault is Ownable, ReentrancyGuard, ERC721Holder {
             require(!riskControlStrategy.isRiskyNFT(token, recipient, tokenId, msg.sender), "risky operation");
         }
         IERC721(token).safeTransferFrom(address(this), recipient, tokenId);
+        emit WithdrawNFT(token, address(this), recipient, tokenId);
     }
 
     function batchWithdrawNFT(address token, address[] memory recipients, uint256[] memory tokenIds) external onlyAdmin nonReentrant {
