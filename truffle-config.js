@@ -17,7 +17,7 @@
  * phrase from a file you've .gitignored so it doesn't accidentally become public.
  *
  */
-
+require('dotenv').config();
 const HDWalletProvider = require('@truffle/hdwallet-provider');
 
 const fs = require('fs');
@@ -134,4 +134,8 @@ module.exports = {
     //   }
     // }
   // }
+  plugins: ['truffle-plugin-verify'],
+  api_keys: {
+    bscscan: process.env.bscscan_apikey
+  }
 };
