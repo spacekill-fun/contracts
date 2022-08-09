@@ -50,10 +50,10 @@ contract GameNFT is ERC4907, ERC2981, Ownable {
         _setTokenURI(tokenId, _tokenURI);
     }
 
-    function batchMint(uint256[] memory tokenIds, address[] memory receivers, string[] memory tokenURIs) external onlyAdmin {
-        require(tokenIds.length == receivers.length && receivers.length == tokenURIs.length, "inconsistent length");
+    function batchMint(uint256[] memory tokenIds, address to, string[] memory tokenURIs) external onlyAdmin {
+        require(tokenIds.length == tokenURIs.length, "inconsistent length");
         for (uint256 i = 0; i < tokenIds.length; i++) {
-            mintInternal(receivers[i], tokenIds[i]);
+            mintInternal(to, tokenIds[i]);
             _setTokenURI(tokenIds[i], _tokenURIs[i]);
         }
     }
