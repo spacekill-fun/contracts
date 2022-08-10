@@ -28,7 +28,7 @@ interface IERC165 {
 
 // File: @openzeppelin/contracts/interfaces/IERC2981.sol
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts (last updated v4.6.0) (interfaces/IERC2981.sol)
 
 pragma solidity ^0.8.0;
@@ -54,7 +54,7 @@ interface IERC2981 is IERC165 {
 
 // File: @openzeppelin/contracts/utils/introspection/ERC165.sol
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (utils/introspection/ERC165.sol)
 
 pragma solidity ^0.8.0;
@@ -84,7 +84,7 @@ abstract contract ERC165 is IERC165 {
 
 // File: @openzeppelin/contracts/token/common/ERC2981.sol
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts (last updated v4.7.0) (token/common/ERC2981.sol)
 
 pragma solidity ^0.8.0;
@@ -196,7 +196,7 @@ abstract contract ERC2981 is IERC2981, ERC165 {
 
 // File: @openzeppelin/contracts/token/ERC721/IERC721.sol
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts (last updated v4.7.0) (token/ERC721/IERC721.sol)
 
 pragma solidity ^0.8.0;
@@ -340,7 +340,7 @@ interface IERC721 is IERC165 {
 
 // File: @openzeppelin/contracts/token/ERC721/IERC721Receiver.sol
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts (last updated v4.6.0) (token/ERC721/IERC721Receiver.sol)
 
 pragma solidity ^0.8.0;
@@ -370,7 +370,7 @@ interface IERC721Receiver {
 
 // File: @openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (token/ERC721/extensions/IERC721Metadata.sol)
 
 pragma solidity ^0.8.0;
@@ -398,7 +398,7 @@ interface IERC721Metadata is IERC721 {
 
 // File: @openzeppelin/contracts/utils/Address.sol
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts (last updated v4.7.0) (utils/Address.sol)
 
 pragma solidity ^0.8.1;
@@ -623,7 +623,7 @@ library Address {
 
 // File: @openzeppelin/contracts/utils/Context.sol
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts v4.4.1 (utils/Context.sol)
 
 pragma solidity ^0.8.0;
@@ -650,7 +650,7 @@ abstract contract Context {
 
 // File: @openzeppelin/contracts/utils/Strings.sol
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts (last updated v4.7.0) (utils/Strings.sol)
 
 pragma solidity ^0.8.0;
@@ -728,7 +728,7 @@ library Strings {
 
 // File: @openzeppelin/contracts/token/ERC721/ERC721.sol
 
-// SPDX-License-Identifier: MIT
+
 // OpenZeppelin Contracts (last updated v4.7.0) (token/ERC721/ERC721.sol)
 
 pragma solidity ^0.8.0;
@@ -1183,7 +1183,7 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
 
 // File: contracts/ERC4907/IERC4907.sol
 
-// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.0;
 
 interface IERC4907 {
@@ -1214,7 +1214,7 @@ interface IERC4907 {
 
 // File: contracts/ERC4907/ERC4907.sol
 
-// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.0; 
 
 
@@ -1284,7 +1284,7 @@ contract ERC4907 is ERC721, IERC4907 {
 
 // File: contracts/Ownable.sol
 
-// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.0;
 
 contract Ownable {
@@ -1348,7 +1348,7 @@ contract Ownable {
 
 // File: contracts/GameNFT.sol
 
-// SPDX-License-Identifier: MIT
+
 
 pragma solidity ^0.8.0;
 
@@ -1388,6 +1388,7 @@ contract GameNFT is ERC4907, ERC2981, Ownable {
 
     function batchMint(uint256[] memory tokenIds, address[] memory receivers) external onlyAdmin {
         require(tokenIds.length == receivers.length, "inconsistent length");
+
         for (uint256 i = 0; i < tokenIds.length; i++) {
             mintInternal(receivers[i], tokenIds[i]);
         }
@@ -1400,9 +1401,10 @@ contract GameNFT is ERC4907, ERC2981, Ownable {
 
     function batchMint(uint256[] memory tokenIds, address to, string[] memory tokenURIs) external onlyAdmin {
         require(tokenIds.length == tokenURIs.length, "inconsistent length");
+        
         for (uint256 i = 0; i < tokenIds.length; i++) {
             mintInternal(to, tokenIds[i]);
-            _setTokenURI(tokenIds[i], _tokenURIs[i]);
+            _setTokenURI(tokenIds[i], tokenURIs[i]);
         }
     }
 
