@@ -23,6 +23,25 @@ contract("GameVault", (accounts) => {
         await gameVaultInstance.withdraw(gameTokenInstance.address, withdrawToAccount, amountToWithdraw);
         const balanceAfterWithdraw = await gameTokenInstance.balanceOf(withdrawToAccount);
         assert.equal(amountToWithdraw, balanceAfterWithdraw.toString(), "bad withdraw");
+
+        const riskStrategyInstance = await DefaultRiskControlStrategy.deployed();
+        await gameVaultInstance.setRiskControlStrategy(riskStrategyInstance.address);
+        await riskStrategyInstance.setPaused(true);
+
+        try {
+            await gameVaultInstance.batchWithdraw([gameNFTInstance.address], [withdrawToAccount], [amountToWithdraw], {from: accounts[0]});
+            assert(false);
+        } catch (err) {
+            assert(err);
+        }
+
+        try {
+            await gameVaultInstance.batchWithdraw(gameNFTInstance.address, [withdrawToAccount], [amountToWithdraw], {from: accounts[0]});
+            assert(false);
+        } catch (err) {
+            assert(err);
+        }
+        await riskStrategyInstance.setPaused(false);
     });
 
     it("should withdraw native token properly", async () => {
@@ -45,6 +64,7 @@ contract("GameVault", (accounts) => {
         const gameNFTInstance = await GameNFT.deployed();
         await gameNFTInstance.mint(0, gameVaultInstance.address);
         await gameNFTInstance.mint(1, gameVaultInstance.address, "");
+        await gameNFTInstance.mint(2, gameVaultInstance.address, "");
         const nftTokenBalance = await gameVaultInstance.getTokenBalance(gameNFTInstance.address);
         console.log("gameTokenBalance: ", nftTokenBalance.toString());
         const withdrawToAccount = accounts[1];
@@ -57,6 +77,19 @@ contract("GameVault", (accounts) => {
         const riskStrategyInstance = await DefaultRiskControlStrategy.deployed();
         await gameVaultInstance.setRiskControlStrategy(riskStrategyInstance.address);
         await riskStrategyInstance.setPaused(true);
-        await gameVaultInstance.withdrawNFT(gameNFTInstance.address, withdrawToAccount, 1, {from: accounts[0]});
+        try {
+            await gameVaultInstance.withdrawNFT(gameNFTInstance.address, withdrawToAccount, 1, {from: accounts[0]});
+            assert(false);
+        } catch (err) {
+            assert(err);
+        }
+
+        try {
+            await gameVaultInstance.batchWithdrawNFT(gameNFTInstance.address, [withdrawToAccount], [2], {from: accounts[0]});
+            assert(false);
+        } catch (err) {
+            assert(err);
+        }
+        await riskStrategyInstance.setPaused(false);
     });
 });

@@ -39,6 +39,7 @@ contract GameVault is Ownable, ReentrancyGuard, ERC721Holder {
 
     function batchWithdraw(address token, address payable[] memory recipients, uint[] memory amounts) external onlyAdmin nonReentrant {
         require(recipients.length == amounts.length, "recipient & amount arrays must be the same length");
+
         for (uint i; i < recipients.length; i++) {
             withdrawInternal(token, recipients[i], amounts[i]);
         }  
@@ -46,20 +47,21 @@ contract GameVault is Ownable, ReentrancyGuard, ERC721Holder {
 
     function batchWithdraw(address[] memory tokens, address payable[] memory recipients, uint[] memory amounts) external onlyAdmin nonReentrant{
         require(tokens.length == recipients.length && recipients.length == amounts.length, "inconsistent length");
+
         for (uint i; i < recipients.length; i++) {
             withdrawInternal(tokens[i], recipients[i], amounts[i]);
         }  
     }
 
     function withdraw(address token, address payable recipient, uint256 amount) external onlyAdmin nonReentrant{
-        if (address(riskControlStrategy) != address(0x0)) {
-            require(!riskControlStrategy.isRisky(token, recipient, amount, msg.sender), "risky operation");
-        }
-
         withdrawInternal(token, recipient, amount);
     }
 
     function withdrawInternal(address token, address payable recipient, uint256 amount) internal {
+        if (address(riskControlStrategy) != address(0x0)) {
+            require(!riskControlStrategy.isRisky(token, recipient, amount, msg.sender), "risky operation");
+        }
+        
         if (address(token) == address(0x0)) {
             Address.sendValue(recipient, amount);
         } else {
@@ -78,6 +80,7 @@ contract GameVault is Ownable, ReentrancyGuard, ERC721Holder {
 
     function batchWithdrawNFT(address token, address[] memory recipients, uint256[] memory tokenIds) external onlyAdmin nonReentrant {
         require(tokenIds.length == recipients.length, "inconsistent length");
+
         for (uint i; i < recipients.length; i++) {
             withdrawNFT(token, recipients[i], tokenIds[i]);
         }
