@@ -16,6 +16,7 @@
     "truffle-abi": "^1.0.3"
   },
   "devDependencies": {
+    "eth-gas-reporter": "^0.2.25",
     "truffle-plugin-verify": "^0.5.27"
   }
 }
