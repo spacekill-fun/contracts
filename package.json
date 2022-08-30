@@ -5,7 +5,12 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "genabi": "truffle compile && truffle-abi -d build/contracts/ -o abi"
+    "genabi": "truffle compile && truffle-abi -d build/contracts/ -o abi",
+    "deployTokens": "truffle migrate --f 2 --to 5",
+    "deployGameNFT": "truffle migrate --f 4 --to 4",
+    "deployGameToken": "truffle migrate --f 2 --to 2",
+    "deployGovToken": "truffle migrate --f 3 --to 3",
+    "deployGameVault": "truffle migrate --f 5 --to 5"
   },
   "author": "",
   "license": "ISC",

@@ -1,0 +1,26 @@
+{
+    "govToken": {
+        "name": "Space Kill King",
+        "symbol": "SKK",
+        "cap": "50000000000000000000000000000",
+        "owner": "0x076979a0B3C87334E5d72E3afCaFaa80F7888Cac"
+    },
+
+    "gameTokens": [{
+        "name": "Space Kill Silver",
+        "symbol": "SKS",
+        "owner": "0x076979a0B3C87334E5d72E3afCaFaa80F7888Cac"
+    }],
+
+    "gameNFTs": [{
+        "name": "Space Kill NFT",
+        "symbol": "SKNFT",
+        "mintAdmins": ["0x550bB66C3050C2e9C5DC2b35aa924485b48B67d0"],
+        "owner":""
+    }],
+
+    "gameVault": {
+        "withdrawAdmins": ["0x550bB66C3050C2e9C5DC2b35aa924485b48B67d0"],
+        "owner": ""
+    }
+}

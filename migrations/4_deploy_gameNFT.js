@@ -1,10 +1,40 @@
 const GameNFT = artifacts.require("GameNFT");
+const tokenConfig = require("../tokenConfig.json");
+const deploymentsFile = "./deployments.json";
+const helper = require("./helper.js");
+module.exports = async function (deployer, network) {
+  let deployments
+  helper.jsonReader(deploymentsFile, (err, deploymentsData) => {
+    if (err) {
+      console.log("Error reading file:", err);
+      return;
+    }
+    deployments = deploymentsData;
+  });
 
-module.exports = async function (deployer) {
-  await deployer.deploy(GameNFT, "Space Kill NFT", "SKNFT");
-  console.log("GameNFT deployed: ", GameNFT.address);
-  const mintAdmin = "0x550bB66C3050C2e9C5DC2b35aa924485b48B67d0";
-  const nftInstance = await GameNFT.deployed();
-  await nftInstance.enableAdmin(mintAdmin);
-  console.log(`${mintAdmin} is added as mint admin`)
+
+  for (let gameNFT of tokenConfig.gameNFTs) {
+    await deployer.deploy(GameNFT, gameNFT.name, gameNFT.symbol);
+    console.log("GameNFT deployed: ", GameNFT.address);
+    if (deployments[network] == undefined) deployments[network] = {}
+    deployments[network][gameNFT.symbol] = GameNFT.address
+    let gameNFTInstance = await GameNFT.deployed();
+
+    for (let mintAdmin of gameNFT.mintAdmins) {
+      await gameNFTInstance.enableAdmin(mintAdmin);
+      console.log(`${mintAdmin} is added as mint admin`);
+    }
+
+    // Transfer ownership
+    if (gameNFT.owner) {
+      if (web3.utils.isAddress(gameNFT.owner)) {
+       await gameNFTInstance.transferOwnership(gameNFT.owner, true);
+       console.log(`Done to transfer ownership to ${gameNFT.owner}`);
+      } else {
+       console.log("Failed to transfer ownership, invalid owner address configured.");
+      }
+    }
+  }
+
+  helper.jsonWriter(deploymentsFile, deployments);  
 };
