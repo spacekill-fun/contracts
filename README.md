@@ -51,6 +51,6 @@ You could use the files inside flats folder to verify the smart contracts manual
 All abi files are placed in abi folder.
 
 ## How to mint tokens
-truffle exec scripts/mintToken.js --token <token address> --to <token receiver address> --amount <mint amount> --network <network name>
+`truffle exec scripts/mintToken.js --token <token address> --to <token receiver address> --amount <mint amount> --network <network name>`
 
 eg: truffle exec scripts/mintGovToken.js --token 0xCb8DAD63dD2cE2832AcFB2F7f4AC1f67d698FB46 --to 0x758F390696c7d1eb669E02909A6395e5D852665B --amount 1200000000000 --network development
