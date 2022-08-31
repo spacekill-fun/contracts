@@ -43,3 +43,14 @@ Run below command to deploy all the required smart contracts.
 Please replace <network> with the network name you configured.
 
 Once the commond runs successfully. You could view the smart contract addresses in tokenConfig.json.
+
+## How to verify
+You could use the files inside flats folder to verify the smart contracts manually via blockchain explorer.
+
+## How to get abi files
+All abi files are placed in abi folder.
+
+## How to mint tokens
+truffle exec scripts/mintToken.js --token <token address> --to <token receiver address> --amount <mint amount> --network <network name>
+
+eg: truffle exec scripts/mintGovToken.js --token 0xCb8DAD63dD2cE2832AcFB2F7f4AC1f67d698FB46 --to 0x758F390696c7d1eb669E02909A6395e5D852665B --amount 1200000000000 --network development
