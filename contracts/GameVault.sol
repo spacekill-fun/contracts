@@ -40,7 +40,7 @@ contract GameVault is Ownable, ReentrancyGuard, ERC721Holder {
     function batchWithdraw(address token, address payable[] memory recipients, uint[] memory amounts) external onlyAdmin nonReentrant {
         require(recipients.length == amounts.length, "recipient & amount arrays must be the same length");
 
-        for (uint i; i < recipients.length; i++) {
+        for (uint i = 0; i < recipients.length; i++) {
             withdrawInternal(token, recipients[i], amounts[i]);
         }  
     }
@@ -48,7 +48,7 @@ contract GameVault is Ownable, ReentrancyGuard, ERC721Holder {
     function batchWithdraw(address[] memory tokens, address payable[] memory recipients, uint[] memory amounts) external onlyAdmin nonReentrant{
         require(tokens.length == recipients.length && recipients.length == amounts.length, "inconsistent length");
 
-        for (uint i; i < recipients.length; i++) {
+        for (uint i = 0; i < recipients.length; i++) {
             withdrawInternal(tokens[i], recipients[i], amounts[i]);
         }  
     }
@@ -82,11 +82,11 @@ contract GameVault is Ownable, ReentrancyGuard, ERC721Holder {
         emit WithdrawNFT(token, address(this), recipient, tokenId);
     }
 
-    function batchWithdrawNFT(address token, address[] memory recipients, uint256[] memory tokenIds) external onlyAdmin nonReentrant {
-        require(tokenIds.length == recipients.length, "inconsistent length");
+    function batchWithdrawNFT(address[] memory tokens, address[] memory recipients, uint256[] memory tokenIds) external onlyAdmin nonReentrant {
+        require(tokens.length == recipients.length && tokenIds.length == recipients.length, "inconsistent length");
 
-        for (uint i; i < recipients.length; i++) {
-            withdrawNFTInternal(token, recipients[i], tokenIds[i]);
+        for (uint i = 0; i < recipients.length; i++) {
+            withdrawNFTInternal(tokens[i], recipients[i], tokenIds[i]);
         }
     }
 
