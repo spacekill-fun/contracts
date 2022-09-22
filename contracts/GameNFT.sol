@@ -3,8 +3,6 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/common/ERC2981.sol";
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "./ERC4907/ERC4907.sol";
 import "./Ownable.sol";
 
@@ -15,6 +13,7 @@ contract GameNFT is ERC4907, ERC2981, Ownable {
     // Optional mapping for token URIs
     mapping(uint256 => string) private _tokenURIs;
     mapping(address => bool) public admins;
+    uint256 public totalSupply;
 
     event AdminEnabled(address admin, bool enabled);
 
@@ -145,5 +144,20 @@ contract GameNFT is ERC4907, ERC2981, Ownable {
 
     function _baseURI() internal view virtual override returns (string memory) {
         return _baseTokenURI;
+    }
+
+    function _afterTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal virtual override {
+        super._afterTokenTransfer(from, to, tokenId);
+
+        if (from == address(0)) {
+            totalSupply += 1;
+        }
+        if (to == address(0)) {
+            totalSupply -= 1;
+        }
     }
 }
