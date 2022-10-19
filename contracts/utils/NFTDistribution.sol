@@ -264,6 +264,19 @@ contract NFTDistribution is ERC721Holder, Ownable {
         salePrice = _salePrice;
     }
 
+    function withdraw(IERC20 token) external {
+        if (address(token) == address(0x0)) {
+            payable(fundMgr).transfer(address(this).balance);
+            return;
+        }
+
+        token.safeTransfer(fundMgr, token.balanceOf(address(this)));
+    }
+
+    function updateFundMgr(address newFundMgr) external onlyOwner {
+        fundMgr = newFundMgr;
+    }
+
     // ========== Heap Sort Implementation ==========
     function sort(UserInfo[] memory _input) public pure returns (UserInfo[] memory) {
         _buildMaxHeap(_input);
