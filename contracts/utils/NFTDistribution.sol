@@ -18,6 +18,8 @@ contract NFTDistribution is ERC721Holder, Ownable {
         uint128 buyCount;
         uint128 invitesCount;
         uint256 commission;
+        bool inTopCommissions;
+        uint256 topCommissionIndex;
     }
 
     struct PreSaleConfig {
@@ -63,28 +65,46 @@ contract NFTDistribution is ERC721Holder, Ownable {
     
     error NotWhitelisted();
 
+    event RolledOver(bool status);
+    event Claimed(address indexed claimer, address indexed inviter, uint256 tokenId);
+    event PreSaled(address indexed claimer, address indexed inviter, uint256 tokenId);
+    event PreSaleClaimed(address indexed claimer, uint256 tokenId);
+
     constructor(address _fundMgr, address _nftToken) {
         fundMgr = _fundMgr;
         nftToken = IERC721(_nftToken);
     }
 
-    function claimWithInviter(address inviter) external {
+    function claimPreSaledNfts(uint256[] calldata nftIds) external {
+        require(!isPreSaleTime(), "Pre sale not end");
+
+        address buyer = msg.sender;
+        for (uint256 i = 0; i < nftIds.length; i++) {
+            if (preSaledNftOwner[nftIds[i]] == buyer && !preSaledNftClaimed[nftIds[i]]) {
+                preSaledNftClaimed[nftIds[i]] = true;
+                nftToken.safeTransferFrom(address(this), buyer, nftIds[i]);
+                emit PreSaleClaimed(buyer, nftIds[i]);
+            }
+        }
+    }
+
+    function claimWithInviter(address inviter) external payable {
         address buyer = msg.sender;
         require(saleActive, "Not started");
         require(msg.sender == tx.origin, "Bot not allowed");
         require(currentTokenId <= toTokenId, "Sold out");
 
-        internalClaim(buyer, inviter, "");     
+        internalClaim(buyer, inviter, "");
     }
 
-    function claimWithProof(address inviter, bytes32 proofRoot, bytes32[] memory proofPath) external {
+    function claimWithProof(address inviter, bytes32 proofRoot, bytes32[] memory proofPath) external payable {
         address buyer = msg.sender;
         require(saleActive, "Not started");
         require(msg.sender == tx.origin, "Bot not allowed");
         require(currentTokenId <= toTokenId, "Sold out");
         require(specialRateRule[proofRoot].isActive, "Invalid proof root");
         // verify merkle proof
-        bool isValid = verifyProof(buyer, proofRoot, proofPath);
+        bool isValid = verifyProof(inviter, proofRoot, proofPath);
         if(!isValid) revert  NotWhitelisted();
 
         internalClaim(buyer, inviter, proofRoot);        
@@ -102,42 +122,47 @@ contract NFTDistribution is ERC721Holder, Ownable {
             userInfo[buyer].user = buyer;
         }
 
-        if (userInfo[inviter].user == address(0x0)) {
-            userInfo[inviter].user = inviter;
-        }
         userInfo[buyer].buyCount++;
-        uint256 feeToPay = getSalePrice(buyer, inviter, rateRule);
+        uint256 feeToPay = getCurrentSalePrice(buyer, inviter, rateRule);
 
-        tradeToken.safeTransferFrom(buyer, address(this), feeToPay);
+        if (isNativeToken(tradeToken)) {
+            require(msg.value == feeToPay, "Invalid pay");
+        } else {
+            require(msg.value == 0, "Invalid pay");
+            tradeToken.safeTransferFrom(buyer, address(this), feeToPay);
+        }
 
         if (buyer != inviter && inviter != address(0x0)) {
+            if (userInfo[inviter].user == address(0x0)) {
+                userInfo[inviter].user = inviter;
+            }
             userInfo[inviter].invitesCount++;
-            uint256 commissionRate = rateRule.getCommissionRate(userInfo[buyer].invitesCount);
+            uint256 commissionRate = rateRule.getCommissionRate(userInfo[inviter].invitesCount);
             uint256 commissionToPay = salePrice * commissionRate / 100;
             userInfo[inviter].commission += commissionToPay;
             updateTopCommissions(userInfo[inviter]);
-            tradeToken.safeTransfer(inviter, commissionToPay);
+
+            if (isNativeToken(tradeToken)) {
+                payable(inviter).transfer(commissionToPay);
+            } else {
+                tradeToken.safeTransfer(inviter, commissionToPay);
+            }
         }
         
         if (isPreSaleTime()) {
             preSaledNfts[buyer].push(currentTokenId);
             preSaledNftOwner[currentTokenId] = buyer;
+            emit PreSaled(buyer, inviter, currentTokenId);
         } else {
             nftToken.safeTransferFrom(address(this), buyer, currentTokenId); 
+            emit Claimed(buyer, inviter, currentTokenId);
         }
         currentTokenId = currentTokenId + 1;
     }
 
-    function claimPreSaledNfts(uint256[] calldata nftIds) external {
-        require(!isPreSaleTime(), "Pre sale not end");
-
-        address buyer = msg.sender;
-        for (uint256 i = 0; i < nftIds.length; i++) {
-            if (preSaledNftOwner[nftIds[i]] == buyer && !preSaledNftClaimed[nftIds[i]]) {
-                preSaledNftClaimed[nftIds[i]] = true;
-                nftToken.safeTransferFrom(address(this), buyer, nftIds[i]);
-            }
-        }
+    function isNativeToken(IERC20 token) internal pure returns (bool) {
+        if (address(token) == address(0x0)) return true;
+        return false;
     }
 
     function verifyProof(address user, bytes32 proofRoot, bytes32[] memory proofPath) public pure returns(bool){
@@ -147,25 +172,34 @@ contract NFTDistribution is ERC721Holder, Ownable {
     }
 
     function updateTopCommissions(UserInfo memory updatedUserInfo) internal {
-        if (updatedUserInfo.commission < topCommissions[configuredTopCommissionNum - 1].commission) {
-            return;
-        }
-
         if (topCommissions.length == 0) {
+            updatedUserInfo.inTopCommissions = true;
+            updatedUserInfo.topCommissionIndex = 0;
             topCommissions.push(updatedUserInfo);
             return;
         }
 
         if (topCommissions.length > configuredTopCommissionNum) {
+            if (updatedUserInfo.commission < topCommissions[configuredTopCommissionNum - 1].commission) {
+                return;
+            }
             topCommissions[configuredTopCommissionNum] = updatedUserInfo;
         } else {
-            topCommissions.push(updatedUserInfo);
+            if (updatedUserInfo.inTopCommissions) {
+                topCommissions[updatedUserInfo.topCommissionIndex] = updatedUserInfo;
+            } else {
+                updatedUserInfo.topCommissionIndex = topCommissions.length;
+                updatedUserInfo.inTopCommissions = true;
+                topCommissions.push(updatedUserInfo);
+            }
         }
         
         UserInfo[] memory temp = topCommissions;
         sort(temp);
         for (uint i = 0; i < temp.length; i++) {
+            temp[i].topCommissionIndex = i;
             topCommissions[i] = temp[i];
+            userInfo[temp[i].user] = temp[i];
         }
     }
 
@@ -185,7 +219,7 @@ contract NFTDistribution is ERC721Holder, Ownable {
         return uncommonNftTickers;
     }
 
-    function getSalePrice(address buyer, address inviter, IRateRule currentRateRule) public view returns (uint256) {
+    function getCurrentSalePrice(address buyer, address inviter, IRateRule currentRateRule) public view returns (uint256) {
         if (isPreSaleTime()) {
             return salePrice - salePrice * preSaleConfig.discountRate / 100;
         }
@@ -193,6 +227,20 @@ contract NFTDistribution is ERC721Holder, Ownable {
         if (buyer == inviter || inviter == address(0x0)) return salePrice;
 
         return salePrice - salePrice * currentRateRule.getSalePriceDiscount(userInfo[inviter].buyCount) / 100;
+    }
+
+    function getSalePriceDiscount(address inviter, bytes32 proofRoot) external view returns(uint256) {
+        if (isPreSaleTime()) {
+            return preSaleConfig.discountRate;
+        }
+        if (inviter == address(0x0)) {
+            return 0;
+        }
+        IRateRule rateRule = defaultRateRule;
+        if (proofRoot != "") {
+            rateRule = specialRateRule[proofRoot].rateRule;
+        }
+        return rateRule.getSalePriceDiscount(userInfo[inviter].buyCount);
     }
 
     function isPreSaleTime() public view returns (bool) {
@@ -257,7 +305,15 @@ contract NFTDistribution is ERC721Holder, Ownable {
 
         fromTokenId = _fromTokenId;
         toTokenId = _toTokenId;
-        currentTokenId = _fromTokenId;
+        if (currentTokenId < _fromTokenId) {
+            currentTokenId = _fromTokenId;
+        }
+    }
+
+    function flipSaleStatus() external onlyOwner {
+        saleActive = !saleActive;
+
+        emit RolledOver(saleActive);
     }
 
     function setSalePrice(uint128 _salePrice) external onlyOwner {
