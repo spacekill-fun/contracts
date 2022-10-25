@@ -75,19 +75,6 @@ contract NFTDistribution is ERC721Holder, Ownable {
         nftToken = IERC721(_nftToken);
     }
 
-    function claimPreSaledNfts(uint256[] calldata nftIds) external {
-        require(!isPreSaleTime(), "Pre sale not end");
-
-        address buyer = msg.sender;
-        for (uint256 i = 0; i < nftIds.length; i++) {
-            if (preSaledNftOwner[nftIds[i]] == buyer && !preSaledNftClaimed[nftIds[i]]) {
-                preSaledNftClaimed[nftIds[i]] = true;
-                nftToken.safeTransferFrom(address(this), buyer, nftIds[i]);
-                emit PreSaleClaimed(buyer, nftIds[i]);
-            }
-        }
-    }
-
     function claimWithInviter(address inviter) external payable {
         address buyer = msg.sender;
         require(saleActive, "Not started");
@@ -160,6 +147,28 @@ contract NFTDistribution is ERC721Holder, Ownable {
         currentTokenId = currentTokenId + 1;
     }
 
+    function claimPreSaledNfts(uint256[] calldata nftIds) external {
+        require(!isPreSaleTime(), "Pre sale not end");
+
+        address buyer = msg.sender;
+        for (uint256 i = 0; i < nftIds.length; i++) {
+            if (preSaledNftOwner[nftIds[i]] == buyer && !preSaledNftClaimed[nftIds[i]]) {
+                preSaledNftClaimed[nftIds[i]] = true;
+                nftToken.safeTransferFrom(address(this), buyer, nftIds[i]);
+                emit PreSaleClaimed(buyer, nftIds[i]);
+            }
+        }
+    }
+
+    function withdraw(IERC20 token) external {
+        if (address(token) == address(0x0)) {
+            payable(fundMgr).transfer(address(this).balance);
+            return;
+        }
+
+        token.safeTransfer(fundMgr, token.balanceOf(address(this)));
+    }
+
     function isNativeToken(IERC20 token) internal pure returns (bool) {
         if (address(token) == address(0x0)) return true;
         return false;
@@ -183,7 +192,11 @@ contract NFTDistribution is ERC721Holder, Ownable {
             if (updatedUserInfo.commission < topCommissions[configuredTopCommissionNum - 1].commission) {
                 return;
             }
-            topCommissions[configuredTopCommissionNum] = updatedUserInfo;
+            if (updatedUserInfo.inTopCommissions) {
+                topCommissions[updatedUserInfo.topCommissionIndex] = updatedUserInfo;
+            } else {
+                topCommissions[configuredTopCommissionNum] = updatedUserInfo;
+            }
         } else {
             if (updatedUserInfo.inTopCommissions) {
                 topCommissions[updatedUserInfo.topCommissionIndex] = updatedUserInfo;
@@ -318,15 +331,6 @@ contract NFTDistribution is ERC721Holder, Ownable {
 
     function setSalePrice(uint128 _salePrice) external onlyOwner {
         salePrice = _salePrice;
-    }
-
-    function withdraw(IERC20 token) external {
-        if (address(token) == address(0x0)) {
-            payable(fundMgr).transfer(address(this).balance);
-            return;
-        }
-
-        token.safeTransfer(fundMgr, token.balanceOf(address(this)));
     }
 
     function updateFundMgr(address newFundMgr) external onlyOwner {
